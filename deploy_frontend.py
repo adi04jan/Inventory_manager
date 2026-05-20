@@ -1,5 +1,6 @@
 """Deploy built frontend/dist/ to the BINDEX server via SSH."""
 import os
+import time
 import paramiko
 
 HOST = "182.70.254.11"
@@ -8,6 +9,8 @@ USER = "aditya"
 PASSWORD = "root"
 LOCAL_DIST = "frontend/dist"
 REMOTE_DIST = "/var/bindex/frontend/dist"
+BACKEND_MAIN = "backend/app/main.py"
+REMOTE_MAIN = "/var/bindex/app/main.py"
 
 
 def run(ssh, cmd):
@@ -19,6 +22,17 @@ def run(ssh, cmd):
     if err.strip():
         print("ERR:", err.strip())
     return out
+
+
+def sudo_run(ssh, cmd):
+    """Run command via sudo with PTY (needed for systemctl)."""
+    channel = ssh.get_transport().open_session()
+    channel.get_pty()
+    channel.exec_command(f"echo {PASSWORD} | sudo -S {cmd}")
+    time.sleep(3)
+    out = channel.recv(4096).decode("utf-8", "replace")
+    channel.close()
+    return out.strip()
 
 
 def upload_dir(sftp, local, remote):
@@ -46,15 +60,20 @@ def main():
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(HOST, port=PORT, username=USER, password=PASSWORD)
 
+    sftp = ssh.open_sftp()
     run(ssh, f"mkdir -p {REMOTE_DIST}")
 
-    sftp = ssh.open_sftp()
     print(f"Uploading {LOCAL_DIST} -> {REMOTE_DIST}")
     upload_dir(sftp, LOCAL_DIST, REMOTE_DIST)
+
+    if os.path.isfile(BACKEND_MAIN):
+        print(f"Uploading {BACKEND_MAIN} -> {REMOTE_MAIN}")
+        sftp.put(BACKEND_MAIN, REMOTE_MAIN)
+
     sftp.close()
 
     print("Restarting bindex service...")
-    run(ssh, "systemctl restart bindex")
+    sudo_run(ssh, "systemctl restart bindex")
     status = run(ssh, "systemctl is-active bindex").strip()
     print(f"Service status: {status}")
     ssh.close()
@@ -62,7 +81,7 @@ def main():
     if status == "active":
         print("Done. Visit http://182.70.254.11:1880")
     else:
-        print("WARNING: Service may not have started cleanly.")
+        print("WARNING: Service may not have started cleanly. Check: journalctl -u bindex -n 50")
 
 
 if __name__ == "__main__":

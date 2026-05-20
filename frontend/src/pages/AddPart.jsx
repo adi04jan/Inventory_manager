@@ -6,7 +6,7 @@ const FIELDS = [
   { key: 'name',         label: 'Name *',       type: 'text',   required: true, full: true },
   { key: 'category',     label: 'Category',      type: 'text' },
   { key: 'package',      label: 'Package',       type: 'text' },
-  { key: 'part_number',  label: 'Part Number',   type: 'text' },
+  { key: 'pn',           label: 'Part Number',   type: 'text' },
   { key: 'manufacturer', label: 'Manufacturer',  type: 'text' },
   { key: 'description',  label: 'Description',   type: 'text',   full: true },
   { key: 'voltage',      label: 'Voltage',       type: 'text' },

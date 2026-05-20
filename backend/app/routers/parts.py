@@ -34,9 +34,13 @@ def list_parts(
     params: List = []
 
     if q:
-        like = f"%{q}%"
-        conditions.append("(name LIKE ? OR pn LIKE ? OR description LIKE ?)")
-        params.extend([like, like, like])
+        for token in q.strip().split():
+            like = f"%{token}%"
+            conditions.append(
+                "(name LIKE ? OR pn LIKE ? OR description LIKE ?"
+                " OR manufacturer LIKE ? OR category LIKE ? OR package LIKE ?)"
+            )
+            params.extend([like, like, like, like, like, like])
     if category:
         conditions.append("category = ?")
         params.append(category)

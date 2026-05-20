@@ -9,8 +9,8 @@ USER = "aditya"
 PASSWORD = "root"
 LOCAL_DIST = "frontend/dist"
 REMOTE_DIST = "/var/bindex/frontend/dist"
-BACKEND_MAIN = "backend/app/main.py"
-REMOTE_MAIN = "/var/bindex/app/main.py"
+BACKEND_APP = "backend/app"
+REMOTE_APP = "/var/bindex/app"
 
 
 def run(ssh, cmd):
@@ -66,9 +66,9 @@ def main():
     print(f"Uploading {LOCAL_DIST} -> {REMOTE_DIST}")
     upload_dir(sftp, LOCAL_DIST, REMOTE_DIST)
 
-    if os.path.isfile(BACKEND_MAIN):
-        print(f"Uploading {BACKEND_MAIN} -> {REMOTE_MAIN}")
-        sftp.put(BACKEND_MAIN, REMOTE_MAIN)
+    if os.path.isdir(BACKEND_APP):
+        print(f"Uploading {BACKEND_APP} -> {REMOTE_APP}")
+        upload_dir(sftp, BACKEND_APP, REMOTE_APP)
 
     sftp.close()
 

@@ -6,10 +6,16 @@ export default function Topbar() {
   const navigate = useNavigate()
   const { data: health } = useHealth()
 
+  const currentQ = params.get('q') ?? ''
+
   function handleSearch(e) {
     if (e.key === 'Enter') {
       const q = e.target.value.trim()
       navigate(`/inventory${q ? `?q=${encodeURIComponent(q)}` : ''}`)
+    }
+    if (e.key === 'Escape') {
+      e.target.value = ''
+      navigate('/inventory')
     }
   }
 
@@ -31,10 +37,18 @@ export default function Topbar() {
             <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
           <input
-            placeholder="Search parts, bins…"
-            defaultValue={params.get('q') ?? ''}
+            key={currentQ}
+            defaultValue={currentQ}
+            placeholder="Search parts, bins, categories… (Enter)"
             onKeyDown={handleSearch}
           />
+          {currentQ && (
+            <button
+              onClick={() => navigate('/inventory')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)', fontSize: 14, padding: '0 2px' }}
+              title="Clear search"
+            >✕</button>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto' }}>
           <div style={{

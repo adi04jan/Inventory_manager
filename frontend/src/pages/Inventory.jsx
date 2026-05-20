@@ -1,9 +1,64 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { useParts } from '../api/parts'
+import { useParts, useDispense } from '../api/parts'
 import StockPill from '../components/StockPill'
 import BinLabel from '../components/BinLabel'
 import PartThumb from '../components/PartThumb'
+
+function DispenseCell({ part }) {
+  const [qty, setQty] = useState(1)
+  const [state, setState] = useState(null) // null | 'ok' | 'err'
+  const [errMsg, setErrMsg] = useState('')
+  const dispense = useDispense()
+
+  async function handleDispense(e) {
+    e.stopPropagation()
+    if (qty < 1 || qty > part.qty) return
+    setState(null)
+    try {
+      await dispense.mutateAsync({ id: part.id, qty, actor: 'workbench' })
+      setState('ok')
+      setQty(1)
+      setTimeout(() => setState(null), 2000)
+    } catch (err) {
+      setState('err')
+      setErrMsg(err.message ?? 'Failed')
+      setTimeout(() => setState(null), 3000)
+    }
+  }
+
+  if (part.qty === 0) {
+    return <span className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>out of stock</span>
+  }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
+      <input
+        type="number"
+        min={1}
+        max={part.qty}
+        value={qty}
+        onChange={e => setQty(Math.max(1, Math.min(part.qty, Number(e.target.value) || 1)))}
+        className="search__input"
+        style={{ width: 52, textAlign: 'center' }}
+      />
+      <button
+        className="btn btn--rust btn--xs"
+        onClick={handleDispense}
+        disabled={dispense.isPending}
+        title={`Dispense ${qty} ${part.unit}`}
+      >
+        {dispense.isPending ? '…' : '−'}
+      </button>
+      {state === 'ok' && (
+        <span className="mono" style={{ fontSize: 10, color: 'var(--olive)' }}>✓</span>
+      )}
+      {state === 'err' && (
+        <span className="mono" style={{ fontSize: 10, color: 'var(--rust)' }} title={errMsg}>!</span>
+      )}
+    </div>
+  )
+}
 
 export default function Inventory() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -35,13 +90,21 @@ export default function Inventory() {
   }
 
   const categories = [...new Set(items.map(p => p.category).filter(Boolean))].sort()
+  const activeQ = searchParams.get('q') ?? ''
 
   return (
     <div>
       <div className="page__head">
-        <h1 className="page__title">Inventory</h1>
+        <div>
+          <h1 className="page__title">Inventory</h1>
+          {activeQ && (
+            <div className="page__sub">
+              Results for "{activeQ}" · {total} found
+            </div>
+          )}
+        </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>{total} parts</span>
+          {!activeQ && <span className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>{total} parts</span>}
           <Link to="/parts/new" className="btn btn--rust btn--sm">+ Add Part</Link>
         </div>
       </div>
@@ -74,6 +137,12 @@ export default function Inventory() {
         >
           Low stock only
         </button>
+
+        {activeQ && (
+          <button className="btn btn--ghost btn--sm" onClick={() => { setFilter('q', ''); navigate('/inventory') }}>
+            ✕ Clear search
+          </button>
+        )}
       </div>
 
       {error && <div className="chip chip--rust" style={{ marginBottom: 12 }}>{error.message}</div>}
@@ -86,7 +155,7 @@ export default function Inventory() {
             <th>Package</th>
             <th>Bin</th>
             <th>Stock</th>
-            <th>Min</th>
+            <th>Dispense</th>
           </tr>
         </thead>
         <tbody>
@@ -106,7 +175,7 @@ export default function Inventory() {
                   <PartThumb category={p.category} size={32} />
                   <div>
                     <div className="cellpart__name">{p.name}</div>
-                    {p.part_number && <div className="cellpart__pn">{p.part_number}</div>}
+                    {p.pn && <div className="cellpart__pn">{p.pn}</div>}
                   </div>
                 </div>
               </td>
@@ -114,13 +183,13 @@ export default function Inventory() {
               <td>{p.package  ? <span className="chip chip--ink">{p.package}</span>  : '—'}</td>
               <td><BinLabel id={p.bin_id} /></td>
               <td><StockPill qty={p.qty} unit={p.unit} minQty={p.min_qty} /></td>
-              <td className="mono" style={{ fontSize: 12 }}>{p.min_qty}</td>
+              <td><DispenseCell part={p} /></td>
             </tr>
           ))}
           {!isLoading && items.length === 0 && (
             <tr>
               <td colSpan={6} style={{ color: 'var(--ink-3)', fontStyle: 'italic' }}>
-                No parts found
+                {activeQ ? `No parts match "${activeQ}"` : 'No parts found'}
               </td>
             </tr>
           )}

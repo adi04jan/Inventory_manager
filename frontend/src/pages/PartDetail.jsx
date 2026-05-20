@@ -60,12 +60,12 @@ export default function PartDetail() {
 
   const editFields = [
     ['name',         'Name',         'text'],
+    ['pn',           'Part Number',  'text'],
     ['description',  'Description',  'text'],
     ['voltage',      'Voltage',      'text'],
     ['bin_id',       'Bin ID',       'text'],
     ['min_qty',      'Min Qty',      'number'],
     ['cost',         'Cost',         'number'],
-    ['notes',        'Notes',        'text'],
   ]
 
   return (
@@ -89,8 +89,8 @@ export default function PartDetail() {
             <div>
               <div className="mono cap" style={{ fontSize: 10, color: 'var(--ink-3)' }}>{part.category ?? 'No category'}</div>
               <div className="display" style={{ fontSize: 20 }}>{part.name}</div>
-              {part.part_number && (
-                <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>{part.part_number}</div>
+              {part.pn && (
+                <div className="mono" style={{ fontSize: 11, color: 'var(--ink-3)' }}>{part.pn}</div>
               )}
             </div>
           </div>
@@ -165,13 +165,7 @@ export default function PartDetail() {
                   <p className="mono" style={{ margin: 0 }}>{part.voltage}</p>
                 </div>
               )}
-              {part.notes && (
-                <div>
-                  <span className="fnote">Notes</span>
-                  <p style={{ margin: 0 }}>{part.notes}</p>
-                </div>
-              )}
-              {!part.description && !part.voltage && !part.notes && (
+              {!part.description && !part.voltage && (
                 <p style={{ color: 'var(--ink-3)', fontStyle: 'italic', margin: 0 }}>No description — click Edit to add one.</p>
               )}
             </div>

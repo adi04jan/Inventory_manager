@@ -1,6 +1,7 @@
 import csv
 import io
 import uuid
+from typing import Dict, List
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from app.db import get_db, row_to_dict
@@ -12,7 +13,7 @@ router = APIRouter(tags=["system"])
 
 # In-memory staging: {import_id: list[normalised_row_dict]}
 # Lost on restart — acceptable since upload+commit is a fast two-step.
-_pending_imports: dict[str, list[dict]] = {}
+_pending_imports: Dict[str, List[dict]] = {}
 
 _CSV_COLUMNS = ["Name", "Quantity", "Type", "Voltage", "Package", "Description", "Place"]
 
@@ -76,7 +77,7 @@ def export_csv():
 # ─── CSV ingest (two-phase) ───────────────────────────────────────────────────
 
 def _normalise_row(row: dict, row_num: int) -> tuple[dict, list[str]]:
-    issues: list[str] = []
+    issues: List[str] = []
 
     name = (row.get("Name") or "").strip()
     if not name:

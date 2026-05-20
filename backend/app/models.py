@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 
 class PartCreate(BaseModel):
@@ -52,7 +52,7 @@ class PartResponse(BaseModel):
 
 
 class PaginatedParts(BaseModel):
-    items: list[PartResponse]
+    items: List[PartResponse]
     total: int
     page: int
     size: int
@@ -82,7 +82,7 @@ class EventResponse(BaseModel):
 
 
 class PaginatedEvents(BaseModel):
-    items: list[EventResponse]
+    items: List[EventResponse]
     total: int
     page: int
     size: int
@@ -105,7 +105,7 @@ class BinDetailResponse(BaseModel):
     col_num: int
     description: Optional[str] = None
     capacity_hint: Optional[int] = None
-    parts: list[PartResponse]
+    parts: List[PartResponse]
 
 
 class HealthResponse(BaseModel):
@@ -120,13 +120,13 @@ class ImportPreviewRow(BaseModel):
     category: Optional[str] = None
     package: Optional[str] = None
     bin_id: Optional[str] = None
-    issues: list[str]
+    issues: List[str]
 
 
 class ImportPreviewResponse(BaseModel):
     import_id: str
     row_count: int
-    preview: list[ImportPreviewRow]
+    preview: List[ImportPreviewRow]
 
 
 class ImportCommitResponse(BaseModel):

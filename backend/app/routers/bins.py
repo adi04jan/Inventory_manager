@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, HTTPException
 from app.db import get_db, row_to_dict
 from app.models import BinResponse, BinDetailResponse, PartResponse
@@ -5,7 +6,7 @@ from app.models import BinResponse, BinDetailResponse, PartResponse
 router = APIRouter(prefix="/api/bins", tags=["bins"])
 
 
-@router.get("", response_model=list[BinResponse])
+@router.get("", response_model=List[BinResponse])
 def list_bins():
     with get_db() as conn:
         rows = conn.execute("""

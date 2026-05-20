@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, HTTPException, Query
 from app.db import get_db, row_to_dict
 from app.models import (
@@ -28,8 +29,8 @@ def list_parts(
     page: int = Query(default=1, ge=1),
     size: int = Query(default=50, ge=1, le=200),
 ):
-    conditions: list[str] = []
-    params: list = []
+    conditions: List[str] = []
+    params: List = []
 
     if q:
         like = f"%{q}%"

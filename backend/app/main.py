@@ -1,7 +1,10 @@
 from __future__ import annotations
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.routers import parts, bins, system
 
 
@@ -23,7 +26,6 @@ app.include_router(parts.router)
 app.include_router(bins.router)
 app.include_router(system.router)
 
-
-@app.get("/")
-def root():
-    return {"service": "bindex", "version": "0.1.0", "docs": "/docs"}
+FRONTEND_DIR = Path(os.environ.get("BINDEX_FRONTEND", "/var/bindex/frontend/dist"))
+if FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

@@ -30,7 +30,10 @@ cp "$DEPLOY_DIR/requirements.txt" "$APP_DIR/"
 
 # ── 4. Virtualenv + dependencies ──────────────────────────────────────────────
 echo "[4/6] Installing Python dependencies..."
-$PY -m venv "$APP_DIR/venv"
+# Install virtualenv in user space (no apt/sudo needed)
+pip3 install --user virtualenv -q
+VENV_BIN=$(python3 -c "import site; print(site.getuserbase())")/bin/virtualenv
+$VENV_BIN "$APP_DIR/venv"
 "$APP_DIR/venv/bin/pip" install --upgrade pip -q
 "$APP_DIR/venv/bin/pip" install -r "$APP_DIR/requirements.txt" -q
 echo "      Dependencies installed."

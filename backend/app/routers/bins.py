@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import List
 from fastapi import APIRouter, HTTPException
 from app.db import get_db, row_to_dict

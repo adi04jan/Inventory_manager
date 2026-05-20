@@ -3,14 +3,15 @@ import csv
 import io
 import uuid
 from typing import Dict, List
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
+from app.auth import get_current_user
 from app.db import get_db, row_to_dict
 from app.models import (
     HealthResponse, ImportPreviewRow, ImportPreviewResponse, ImportCommitResponse,
 )
 
-router = APIRouter(tags=["system"])
+router = APIRouter(tags=["system"], dependencies=[Depends(get_current_user)])
 
 # In-memory staging: {import_id: list[normalised_row_dict]}
 # Lost on restart — acceptable since upload+commit is a fast two-step.

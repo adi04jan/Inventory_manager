@@ -1,13 +1,18 @@
 from __future__ import annotations
 from typing import List
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from app.auth import get_current_user
 from app.db import get_db, row_to_dict
 from app.models import (
     PartCreate, PartUpdate, PartResponse, PaginatedParts,
     DispenseRequest, AddStockRequest, EventResponse, PaginatedEvents,
 )
 
-router = APIRouter(prefix="/api/parts", tags=["parts"])
+router = APIRouter(
+    prefix="/api/parts",
+    tags=["parts"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 def _get_part_or_404(conn, part_id: int) -> dict:

@@ -1,10 +1,15 @@
 from __future__ import annotations
 from typing import List
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from app.auth import get_current_user
 from app.db import get_db, row_to_dict
 from app.models import BinResponse, BinDetailResponse, PartResponse
 
-router = APIRouter(prefix="/api/bins", tags=["bins"])
+router = APIRouter(
+    prefix="/api/bins",
+    tags=["bins"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.get("", response_model=List[BinResponse])

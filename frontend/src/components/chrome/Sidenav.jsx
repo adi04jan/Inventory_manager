@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useLogout } from '../../api/auth'
 
 const links = [
   { to: '/',          label: 'Dashboard', icon: 'grid' },
@@ -38,8 +39,10 @@ function Icon({ name }) {
 }
 
 export default function Sidenav() {
+  const logout = useLogout()
+
   return (
-    <nav className="sidenav">
+    <nav className="sidenav" style={{ display: 'flex', flexDirection: 'column' }}>
       {links.map(({ to, label, icon }) => (
         <NavLink
           key={to}
@@ -51,6 +54,17 @@ export default function Sidenav() {
           <span>{label}</span>
         </NavLink>
       ))}
+
+      <button
+        onClick={() => logout.mutate()}
+        className="navitem"
+        style={{ marginTop: 'auto', borderTop: '1px solid var(--rule)', background: 'none', border: 'none', width: '100%', cursor: 'pointer' }}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M6 3H3v10h3M10 5l3 3-3 3M13 8H6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <span>Sign out</span>
+      </button>
     </nav>
   )
 }

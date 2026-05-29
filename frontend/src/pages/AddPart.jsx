@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useCreatePart } from '../api/parts'
+import { useAISuggest } from '../api/ai'
 
 const FIELDS = [
   { key: 'name',         label: 'Name *',       type: 'text',   required: true, full: true },
@@ -17,11 +18,32 @@ const FIELDS = [
   { key: 'cost',         label: 'Cost',          type: 'number', step: 0.01 },
 ]
 
+const AI_FIELDS = ['name', 'manufacturer', 'description', 'category', 'package', 'unit']
+
 export default function AddPart() {
   const navigate = useNavigate()
   const createPart = useCreatePart()
   const [form, setForm] = useState({})
   const [errors, setErrors] = useState({})
+  const [debouncedPn, setDebouncedPn] = useState('')
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedPn(form.pn?.trim() ?? ''), 800)
+    return () => clearTimeout(t)
+  }, [form.pn])
+
+  const suggest = useAISuggest(debouncedPn)
+  const suggestions = suggest.data ?? {}
+  const pending = AI_FIELDS.filter(k => suggestions[k] && suggestions[k] !== form[k])
+
+  function set(key, value) {
+    setForm(d => ({ ...d, [key]: value }))
+    if (errors[key]) setErrors(e => { const next = { ...e }; delete next[key]; return next })
+  }
+
+  function acceptAll() {
+    pending.forEach(k => set(k, suggestions[k]))
+  }
 
   function validate() {
     const errs = {}
@@ -29,11 +51,6 @@ export default function AddPart() {
     if (form.qty !== undefined && (isNaN(Number(form.qty)) || Number(form.qty) < 0)) errs.qty = 'Must be >= 0'
     if (form.min_qty !== undefined && (isNaN(Number(form.min_qty)) || Number(form.min_qty) < 0)) errs.min_qty = 'Must be >= 0'
     return errs
-  }
-
-  function set(key, value) {
-    setForm(d => ({ ...d, [key]: value }))
-    if (errors[key]) setErrors(e => { const next = { ...e }; delete next[key]; return next })
   }
 
   async function handleSubmit(e) {
@@ -60,6 +77,46 @@ export default function AddPart() {
       </div>
 
       {errors._ && <div className="chip chip--rust" style={{ marginBottom: 14 }}>{errors._}</div>}
+
+      {/* AI suggestion strip */}
+      {suggest.isFetching && (
+        <div style={{ fontFamily: 'JetBrains Mono', fontSize: 10, color: 'var(--ink-3)', marginBottom: 8, letterSpacing: '.08em' }}>
+          ✦ looking up {debouncedPn}…
+        </div>
+      )}
+      {!suggest.isFetching && pending.length > 0 && (
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6,
+          marginBottom: 10, padding: '8px 10px',
+          background: 'var(--paper)', border: '1px solid var(--rule)',
+          borderLeft: '3px solid var(--rust)',
+        }}>
+          <span style={{ fontFamily: 'JetBrains Mono', fontSize: 10, color: 'var(--ink-3)', letterSpacing: '.08em', marginRight: 4 }}>
+            ✦ AI
+          </span>
+          {pending.map(k => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => set(k, suggestions[k])}
+              className="chip"
+              title={`Accept: ${suggestions[k]}`}
+              style={{ cursor: 'pointer', background: 'var(--paper-2)', border: '1px solid var(--rule)', padding: '2px 7px' }}
+            >
+              <span style={{ color: 'var(--ink-3)', marginRight: 3 }}>{k}</span>
+              <span style={{ color: 'var(--ink)' }}>{suggestions[k].length > 28 ? suggestions[k].slice(0, 27) + '…' : suggestions[k]}</span>
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={acceptAll}
+            className="btn btn--ghost btn--sm"
+            style={{ marginLeft: 'auto' }}
+          >
+            Accept all
+          </button>
+        </div>
+      )}
 
       <div className="card" style={{ maxWidth: 640 }}>
         <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>

@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.routers import parts, bins, system
-from app.routers import auth_router
+from app.routers import auth_router, ai as ai_router
 
 
 @asynccontextmanager
@@ -24,6 +24,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router.router)
+app.include_router(ai_router.router)
 app.include_router(parts.router)
 app.include_router(bins.router)
 app.include_router(system.router)
